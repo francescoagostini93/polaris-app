@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+
+    <!-- Dendrites (left to soma) -->
+    <path
+        android:pathData="M50,130 Q70,100 100,95"
+        android:strokeColor="#807BA3D4"
+        android:strokeWidth="1.5"
+        android:fillColor="@android:color/transparent"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M40,90 Q65,85 100,95"
+        android:strokeColor="#667BA3D4"
+        android:strokeWidth="1.2"
+        android:fillColor="@android:color/transparent"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M55,60 Q75,75 100,95"
+        android:strokeColor="#4D7BA3D4"
+        android:strokeWidth="1.0"
+        android:fillColor="@android:color/transparent"
+        android:strokeLineCap="round"/>
+
+    <!-- Dendrites (soma to right) -->
+    <path
+        android:pathData="M100,95 Q130,90 160,70"
+        android:strokeColor="#807BA3D4"
+        android:strokeWidth="1.5"
+        android:fillColor="@android:color/transparent"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M100,95 Q135,100 155,120"
+        android:strokeColor="#667BA3D4"
+        android:strokeWidth="1.2"
+        android:fillColor="@android:color/transparent"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M100,95 Q120,115 145,150"
+        android:strokeColor="#4D7BA3D4"
+        android:strokeWidth="1.0"
+        android:fillColor="@android:color/transparent"
+        android:strokeLineCap="round"/>
+
+    <!-- Outer ring -->
+    <path
+        android:pathData="M82,95 a18,18 0 1,0 36,0 a18,18 0 1,0 -36,0"
+        android:strokeColor="#337BA3D4"
+        android:strokeWidth="0.8"
+        android:fillColor="@android:color/transparent"/>
+
+    <!-- Soma (central circle) -->
+    <path
+        android:pathData="M88,95 a12,12 0 1,0 24,0 a12,12 0 1,0 -24,0"
+        android:fillColor="#FF7BA3D4"/>
+
+    <!-- Synapse dots (left) -->
+    <path
+        android:pathData="M47,130 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0"
+        android:fillColor="#995B8BBF"/>
+    <path
+        android:pathData="M37.5,90 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0"
+        android:fillColor="#805B8BBF"/>
+    <path
+        android:pathData="M53,60 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0"
+        android:fillColor="#665B8BBF"/>
+
+    <!-- Synapse dots (right) -->
+    <path
+        android:pathData="M157,70 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0"
+        android:fillColor="#995B8BBF"/>
+    <path
+        android:pathData="M152.5,120 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0"
+        android:fillColor="#805B8BBF"/>
+    <path
+        android:pathData="M143,150 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0"
+        android:fillColor="#665B8BBF"/>
+
+    <!-- Inner glow -->
+    <path
+        android:pathData="M96,95 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0"
+        android:fillColor="#4DFFFFFF"/>
+
+</vector>
