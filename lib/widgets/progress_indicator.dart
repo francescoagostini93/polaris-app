@@ -5,17 +5,19 @@ import '../models/exercise.dart';
 class SessionProgressIndicator extends StatelessWidget {
   final ExerciseType? currentType;
   final Map<ExerciseType, double> scores;
+  final List<ExerciseType>? enabledTypes;
 
   const SessionProgressIndicator({
     super.key,
     this.currentType,
     required this.scores,
+    this.enabledTypes,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final types = ExerciseType.values;
+    final types = enabledTypes ?? ExerciseType.values;
 
     return Row(
       children: List.generate(types.length * 2 - 1, (index) {
@@ -28,7 +30,7 @@ class SessionProgressIndicator extends StatelessWidget {
               height: 3,
               color: isCompleted
                   ? theme.colorScheme.primary
-                  : theme.colorScheme.outline.withOpacity(0.2),
+                  : theme.colorScheme.outline.withValues(alpha:0.2),
             ),
           );
         }
@@ -59,7 +61,7 @@ class SessionProgressIndicator extends StatelessWidget {
         border: Border.all(
           color: isActive
               ? theme.colorScheme.primary
-              : theme.colorScheme.outline.withOpacity(0.3),
+              : theme.colorScheme.outline.withValues(alpha:0.3),
           width: isActive ? 2 : 1,
         ),
       ),
@@ -67,13 +69,13 @@ class SessionProgressIndicator extends StatelessWidget {
         child: isCompleted
             ? const Icon(Icons.check, color: Colors.white, size: 16)
             : Text(
-                '${ExerciseType.values.indexOf(type) + 1}',
+                '${(enabledTypes ?? ExerciseType.values).indexOf(type) + 1}',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
                   color: isActive
                       ? theme.colorScheme.primary
-                      : theme.colorScheme.onSurface.withOpacity(0.5),
+                      : theme.colorScheme.onSurface.withValues(alpha:0.5),
                 ),
               ),
       ),

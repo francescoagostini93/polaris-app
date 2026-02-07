@@ -11,6 +11,7 @@ class SpeechService {
   bool _isListening = false;
   bool _isSpeaking = false;
   bool _isInitialized = false;
+  bool _inContinuousMode = false;
   double _ttsSpeed = 0.5;
 
   // Callbacks
@@ -252,12 +253,19 @@ class SpeechService {
 
     final allWords = <String>[];
     final stopwatch = Stopwatch()..start();
+
+    // Enter continuous mode: suppress intermediate onListeningStopped signals
+    _inContinuousMode = true;
     _isListening = true;
     onListeningStarted?.call();
 
     while (stopwatch.elapsed < totalDuration) {
       final remaining = totalDuration - stopwatch.elapsed;
       if (remaining.inSeconds < 2) break;
+
+      // Stop previous round cleanly before restarting
+      await _speechToText.stop();
+      await Future.delayed(const Duration(milliseconds: 300));
 
       final completer = Completer<String>();
       String lastResult = '';
@@ -294,16 +302,18 @@ class SpeechService {
       final result = await completer.future;
       if (result.isNotEmpty) {
         allWords.add(result);
+        // Show accumulated words to the UI
+        onPartialResult?.call(allWords.join(', '));
       }
 
       // Check if we still have time
       if (stopwatch.elapsed >= totalDuration) break;
-
-      // Brief pause before restarting
-      await Future.delayed(const Duration(milliseconds: 300));
     }
 
+    // Exit continuous mode
+    await _speechToText.stop();
     stopwatch.stop();
+    _inContinuousMode = false;
     _isListening = false;
     onListeningStopped?.call();
 
@@ -322,8 +332,11 @@ class SpeechService {
   void _onSttStatus(String status) {
     debugPrint('STT Status: $status');
     if (status == 'done' || status == 'notListening') {
-      _isListening = false;
-      onListeningStopped?.call();
+      // In continuous mode, don't signal stop between rounds
+      if (!_inContinuousMode) {
+        _isListening = false;
+        onListeningStopped?.call();
+      }
     }
   }
 

@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import '../providers/exercise_provider.dart';
 import '../providers/settings_provider.dart';
-import '../models/exercise.dart';
 import '../widgets/voice_button.dart';
 import '../widgets/exercise_card.dart';
 import '../widgets/progress_indicator.dart';
@@ -31,10 +30,14 @@ class _SessionScreenState extends State<SessionScreen> {
   }
 
   Future<void> _startSession() async {
+    final settings = context.read<SettingsProvider>();
     await _provider.init();
     _provider.addListener(_onStateChange);
-    final gender = context.read<SettingsProvider>().gender;
-    _provider.startSession(gender: gender);
+    _provider.startSession(
+      gender: settings.gender,
+      difficulty: settings.defaultDifficulty,
+      enabledExercises: settings.enabledExercises,
+    );
   }
 
   void _onStateChange() {
@@ -83,6 +86,7 @@ class _SessionScreenState extends State<SessionScreen> {
                   child: SessionProgressIndicator(
                     currentType: provider.currentExerciseType,
                     scores: provider.scores,
+                    enabledTypes: provider.enabledExercises,
                   ),
                 ),
 
@@ -106,7 +110,7 @@ class _SessionScreenState extends State<SessionScreen> {
                     color: theme.colorScheme.surface,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha:0.05),
                         blurRadius: 10,
                         offset: const Offset(0, -2),
                       ),
@@ -121,7 +125,7 @@ class _SessionScreenState extends State<SessionScreen> {
                           padding: const EdgeInsets.all(12),
                           margin: const EdgeInsets.only(bottom: 12),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                            color: theme.colorScheme.primaryContainer.withValues(alpha:0.3),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
@@ -163,7 +167,7 @@ class _SessionScreenState extends State<SessionScreen> {
 
   Widget _buildExerciseCards(ExerciseProvider provider) {
     return Column(
-      children: ExerciseType.values.map((type) {
+      children: provider.enabledExercises.map((type) {
         final isActive = provider.currentExerciseType == type;
         final isCompleted = provider.scores.containsKey(type);
         return Padding(
@@ -186,7 +190,6 @@ class _SessionScreenState extends State<SessionScreen> {
 
       case SessionState.greeting:
       case SessionState.waitingReady:
-      case SessionState.askingDifficulty:
         return _buildMessageArea(theme, provider, Icons.waving_hand);
 
       case SessionState.generating:
@@ -204,7 +207,7 @@ class _SessionScreenState extends State<SessionScreen> {
               Text(
                 'Difficoltà: ${provider.difficulty}/10',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                  color: theme.colorScheme.onSurface.withValues(alpha:0.6),
                 ),
               ),
             ],
@@ -301,7 +304,7 @@ class _SessionScreenState extends State<SessionScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: theme.colorScheme.secondaryContainer.withOpacity(0.3),
+                color: theme.colorScheme.secondaryContainer.withValues(alpha:0.3),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Row(
@@ -363,7 +366,7 @@ class _SessionScreenState extends State<SessionScreen> {
             TextSpan(
               text: text.substring(safeStart, safeEnd),
               style: TextStyle(
-                backgroundColor: theme.colorScheme.primary.withOpacity(0.3),
+                backgroundColor: theme.colorScheme.primary.withValues(alpha:0.3),
                 fontWeight: FontWeight.bold,
                 color: theme.colorScheme.primary,
               ),
@@ -373,7 +376,7 @@ class _SessionScreenState extends State<SessionScreen> {
             TextSpan(
               text: text.substring(safeEnd),
               style: TextStyle(
-                color: theme.colorScheme.onSurface.withOpacity(0.4),
+                color: theme.colorScheme.onSurface.withValues(alpha:0.4),
               ),
             ),
         ],

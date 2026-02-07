@@ -12,7 +12,6 @@ enum SessionState {
   idle,
   greeting,
   waitingReady,
-  askingDifficulty,
   generating,
   runningMemory,
   runningAttention,
@@ -48,6 +47,7 @@ class ExerciseProvider extends ChangeNotifier {
   int _highlightStart = -1;
   int _highlightEnd = -1;
   String _spokenText = ''; // the cleaned text being spoken
+  List<ExerciseType> _enabledExercises = List.from(ExerciseType.values);
 
   // Getters
   SessionState get state => _state;
@@ -64,6 +64,7 @@ class ExerciseProvider extends ChangeNotifier {
   ExerciseType? get currentExerciseType => _currentExerciseType;
   String get errorMessage => _errorMessage;
   SpeechService get speechService => _speechService;
+  List<ExerciseType> get enabledExercises => List.unmodifiable(_enabledExercises);
   int get highlightStart => _highlightStart;
   int get highlightEnd => _highlightEnd;
   String get spokenText => _spokenText;
@@ -78,23 +79,16 @@ class ExerciseProvider extends ChangeNotifier {
     return _scores.values.reduce((a, b) => a + b) / _scores.length;
   }
 
-  int get totalExercises => 4;
+  int get totalExercises => _enabledExercises.length;
   int get currentExerciseIndex {
-    switch (_currentExerciseType) {
-      case ExerciseType.memory:
-        return 0;
-      case ExerciseType.attention:
-        return 1;
-      case ExerciseType.fluency:
-        return 2;
-      case ExerciseType.numbers:
-        return 3;
-      default:
-        return 0;
-    }
+    if (_currentExerciseType == null) return 0;
+    final idx = _enabledExercises.indexOf(_currentExerciseType!);
+    return idx >= 0 ? idx : 0;
   }
 
-  double get progress => (currentExerciseIndex + 1) / totalExercises;
+  double get progress => totalExercises > 0
+      ? (currentExerciseIndex + 1) / totalExercises
+      : 0;
 
   SessionResult? get sessionResult {
     if (_exercises == null) return null;
@@ -144,9 +138,21 @@ class ExerciseProvider extends ChangeNotifier {
     };
   }
 
-  /// Start a new session with gender setting
-  Future<void> startSession({String gender = 'maschio'}) async {
+  /// Start a new session with gender and difficulty from settings
+  Future<void> startSession({
+    String gender = 'maschio',
+    int difficulty = 5,
+    Set<ExerciseType> enabledExercises = const {},
+  }) async {
+    final exercises = enabledExercises.isNotEmpty
+        ? enabledExercises
+        : Set<ExerciseType>.from(ExerciseType.values);
+    // Store ordered list for progress tracking
+    _enabledExercises = ExerciseType.values
+        .where((t) => exercises.contains(t))
+        .toList();
     _state = SessionState.greeting;
+    _difficulty = difficulty;
     _responses.clear();
     _scores.clear();
     _sessionStart = DateTime.now();
@@ -166,32 +172,32 @@ class ExerciseProvider extends ChangeNotifier {
       notifyListeners();
       await _speechService.speak(greeting);
 
-      // Wait for user to say they're ready
+      // Wait for user to confirm they're ready (max 3 attempts)
       _state = SessionState.waitingReady;
       notifyListeners();
 
-      final readyResponse = await _speechService.listen(timeout: const Duration(seconds: 15));
-      _userTranscript = readyResponse;
-      notifyListeners();
+      bool ready = false;
+      for (int attempt = 0; attempt < 3 && !ready; attempt++) {
+        final readyResponse = await _speechService.listen(
+          timeout: const Duration(seconds: 15),
+        );
+        _userTranscript = readyResponse;
+        notifyListeners();
 
-      // Now ask for difficulty
-      _state = SessionState.askingDifficulty;
-      notifyListeners();
+        if (readyResponse.trim().isNotEmpty) {
+          ready = true;
+        } else if (attempt < 2) {
+          // No response detected, ask again
+          final askAgain = await _liveService.sendMessage(
+            'L\'utente non ha risposto. Chiedigli gentilmente se è pronto per iniziare. Sii breve, 1 frase.',
+          );
+          _currentMessage = askAgain;
+          notifyListeners();
+          await _speechService.speak(askAgain);
+        }
+      }
 
-      final diffQuestion = await _liveService.askDifficulty();
-      _currentMessage = diffQuestion;
-      notifyListeners();
-      await _speechService.speak(diffQuestion);
-
-      // Listen for difficulty
-      final diffText = await _speechService.listen(timeout: const Duration(seconds: 15));
-      _userTranscript = diffText;
-      notifyListeners();
-
-      // Parse difficulty
-      _difficulty = _parseDifficulty(diffText);
-
-      // Confirm difficulty
+      // Confirm difficulty from settings and start
       final confirmation = await _liveService.setDifficulty(_difficulty);
       _currentMessage = confirmation;
       notifyListeners();
@@ -204,11 +210,11 @@ class ExerciseProvider extends ChangeNotifier {
 
       _exercises = await _geminiService.generateExercises(_difficulty);
 
-      // Run all 4 exercises in sequence
-      await _runMemoryExercise();
-      await _runAttentionExercise();
-      await _runFluencyExercise();
-      await _runNumbersExercise();
+      // Run enabled exercises in sequence
+      if (exercises.contains(ExerciseType.memory)) await _runMemoryExercise();
+      if (exercises.contains(ExerciseType.attention)) await _runAttentionExercise();
+      if (exercises.contains(ExerciseType.fluency)) await _runFluencyExercise();
+      if (exercises.contains(ExerciseType.numbers)) await _runNumbersExercise();
 
       // Complete session
       _sessionEnd = DateTime.now();
@@ -533,27 +539,6 @@ class ExerciseProvider extends ChangeNotifier {
 
   // ==================== Utility Methods ====================
 
-  int _parseDifficulty(String text) {
-    final numbers = RegExp(r'\d+').allMatches(text);
-    if (numbers.isNotEmpty) {
-      final num = int.tryParse(numbers.first.group(0)!) ?? _difficulty;
-      return num.clamp(1, 10);
-    }
-
-    // Map Italian number words
-    final wordMap = {
-      'uno': 1, 'due': 2, 'tre': 3, 'quattro': 4, 'cinque': 5,
-      'sei': 6, 'sette': 7, 'otto': 8, 'nove': 9, 'dieci': 10,
-    };
-
-    final lower = text.toLowerCase().trim();
-    for (final entry in wordMap.entries) {
-      if (lower.contains(entry.key)) return entry.value;
-    }
-
-    return _difficulty;
-  }
-
   List<int> _parseNumbers(String text) {
     final numbers = <int>[];
     final matches = RegExp(r'\d+').allMatches(text);
@@ -613,6 +598,7 @@ class ExerciseProvider extends ChangeNotifier {
     _currentPart = 0;
     _currentQuestion = 0;
     _currentExerciseType = null;
+    _enabledExercises = List.from(ExerciseType.values);
     _errorMessage = '';
     _highlightStart = -1;
     _highlightEnd = -1;

@@ -21,7 +21,7 @@
     </queries>
 
     <application
-        android:label="Esercizi Cognitivi"
+        android:label="Polaris"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

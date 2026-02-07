@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/exercise.dart';
 import '../providers/settings_provider.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -66,6 +67,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onSelectionChanged: (modes) {
               settings.setThemeMode(modes.first);
             },
+          ),
+
+          const SizedBox(height: 24),
+
+          // Exercise Categories Section
+          _buildSectionTitle(theme, 'Esercizi Attivi'),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              children: [
+                _buildExerciseToggle(settings, ExerciseType.memory, 'Memoria', Icons.menu_book),
+                _buildExerciseToggle(settings, ExerciseType.attention, 'Attenzione', Icons.visibility),
+                _buildExerciseToggle(settings, ExerciseType.fluency, 'Fluenza Verbale', Icons.record_voice_over),
+                _buildExerciseToggle(settings, ExerciseType.numbers, 'Liste Numeriche', Icons.pin),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Seleziona quali esercizi includere nella sessione',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
           ),
 
           const SizedBox(height: 24),
@@ -304,6 +332,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 32),
         ],
+      ),
+    );
+  }
+
+  Widget _buildExerciseToggle(
+    SettingsProvider settings,
+    ExerciseType type,
+    String label,
+    IconData icon,
+  ) {
+    return CheckboxListTile(
+      value: settings.isExerciseEnabled(type),
+      onChanged: (value) {
+        settings.toggleExercise(type, value ?? true);
+      },
+      title: Text(label),
+      secondary: Icon(icon),
+      dense: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
       ),
     );
   }

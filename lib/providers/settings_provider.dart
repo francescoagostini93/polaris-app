@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_config.dart';
+import '../models/exercise.dart';
 
 /// Manages app settings with persistence
 class SettingsProvider extends ChangeNotifier {
@@ -11,6 +12,7 @@ class SettingsProvider extends ChangeNotifier {
   String _apiKey = AppConfig.geminiApiKey;
   String _gender = 'maschio'; // maschio or femmina
   ThemeMode _themeMode = ThemeMode.system;
+  Set<ExerciseType> _enabledExercises = Set.from(ExerciseType.values);
 
   String get email => _email;
   int get defaultDifficulty => _defaultDifficulty;
@@ -19,6 +21,7 @@ class SettingsProvider extends ChangeNotifier {
   String get apiKey => _apiKey;
   String get gender => _gender;
   ThemeMode get themeMode => _themeMode;
+  Set<ExerciseType> get enabledExercises => Set.unmodifiable(_enabledExercises);
   bool get isEmailConfigured => _email.isNotEmpty;
 
   /// Load settings from SharedPreferences
@@ -30,6 +33,15 @@ class SettingsProvider extends ChangeNotifier {
     _ttsSpeed = prefs.getDouble('ttsSpeed') ?? AppConfig.defaultTtsSpeed;
     _apiKey = prefs.getString('apiKey') ?? AppConfig.geminiApiKey;
     _gender = prefs.getString('gender') ?? 'maschio';
+    final enabledList = prefs.getStringList('enabledExercises');
+    if (enabledList != null) {
+      _enabledExercises = enabledList
+          .map((name) => ExerciseType.values.firstWhere(
+                (e) => e.name == name,
+                orElse: () => ExerciseType.memory,
+              ))
+          .toSet();
+    }
     final themeModeStr = prefs.getString('themeMode') ?? 'system';
     _themeMode = ThemeMode.values.firstWhere(
       (m) => m.name == themeModeStr,
@@ -79,6 +91,25 @@ class SettingsProvider extends ChangeNotifier {
     await prefs.setString('gender', value);
     notifyListeners();
   }
+
+  Future<void> toggleExercise(ExerciseType type, bool enabled) async {
+    if (enabled) {
+      _enabledExercises.add(type);
+    } else {
+      // Don't allow disabling all exercises
+      if (_enabledExercises.length > 1) {
+        _enabledExercises.remove(type);
+      }
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      'enabledExercises',
+      _enabledExercises.map((e) => e.name).toList(),
+    );
+    notifyListeners();
+  }
+
+  bool isExerciseEnabled(ExerciseType type) => _enabledExercises.contains(type);
 
   Future<void> setThemeMode(ThemeMode mode) async {
     _themeMode = mode;

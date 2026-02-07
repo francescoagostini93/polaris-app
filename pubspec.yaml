@@ -1,5 +1,5 @@
-name: cognitive_exercises
-description: Cognitive stimulation exercises app with Gemini AI and voice interaction.
+name: polaris
+description: Polaris - Cognitive stimulation exercises app with Gemini AI and voice interaction.
 publish_to: 'none'
 version: 0.1.1+1
 

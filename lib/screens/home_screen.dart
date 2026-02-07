@@ -102,34 +102,22 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: Stack(
-                    alignment: Alignment.center,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Subtle neuron logo overlay
-                      PolarisLogo(
-                        size: 140,
-                        primaryColor: Colors.white.withValues(alpha: 0.15),
-                        secondaryColor: Colors.white.withValues(alpha: 0.1),
+                      const Icon(
+                        Icons.play_arrow_rounded,
+                        size: 80,
+                        color: Colors.white,
                       ),
-                      // Play icon and text
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.play_arrow_rounded,
-                            size: 80,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'INIZIA',
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 2,
-                            ),
-                          ),
-                        ],
+                      const SizedBox(height: 4),
+                      Text(
+                        'INIZIA',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 2,
+                        ),
                       ),
                     ],
                   ),

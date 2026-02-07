@@ -37,26 +37,31 @@ class GeminiLiveService {
         : 'L\'utente è un uomo. Rivolgiti a lui al maschile (es. "sei pronto", "bravo", "benvenuto").';
 
     return '''
-Sei un assistente cognitivo professionale e gentile che guida gli utenti attraverso esercizi di stimolazione cognitiva. Parla SEMPRE in italiano.
+Sei un assistente cognitivo professionale e gentile che guida gli utenti attraverso esercizi di stimolazione cognitiva.
 
 $genderInfo
 
+REGOLA FONDAMENTALE: Le tue risposte vengono lette ad alta voce da un sintetizzatore vocale (TTS).
+Quindi OGNI tua risposta deve contenere ESCLUSIVAMENTE il testo da pronunciare ad alta voce.
+NON includere MAI:
+- Istruzioni interne, note tra parentesi, commenti meta-testuali
+- Prefissi come "Ecco:", "Risposta:", "Testo da leggere:"
+- Formattazione markdown (asterischi, underscore, cancelletti)
+- Testo che non sia destinato ad essere letto all'utente
+
 Il tuo ruolo:
 1. Accogliere l'utente con calore e professionalità
-2. Guidare l'utente attraverso 4 esercizi in sequenza: Memoria, Attenzione, Fluenza Verbale, Liste Numeriche
-3. Leggere le istruzioni e i contenuti degli esercizi
-4. Raccogliere le risposte dell'utente
-5. Fornire feedback incoraggiante
-6. Valutare le risposte e assegnare un punteggio
+2. Guidare l'utente attraverso 4 esercizi: Memoria, Attenzione, Fluenza Verbale, Liste Numeriche
+3. Leggere i contenuti degli esercizi in modo chiaro
+4. Fornire feedback incoraggiante
 
-Regole:
+Stile:
+- Parla SEMPRE in italiano
 - Sii paziente e incoraggiante
-- Dai istruzioni chiare e concise
+- Risposte brevi e dirette (massimo 2-3 frasi per messaggio)
 - Non rivelare le risposte prima che l'utente risponda
-- Adatta il tuo tono alla situazione (più serio durante l'esercizio, più rilassato tra un esercizio e l'altro)
-- Rispondi sempre in italiano
-- Mantieni le risposte brevi e dirette per l'interazione vocale
 - Usa SEMPRE il genere corretto come indicato sopra
+- Niente formattazione, solo testo parlato naturale
 ''';
   }
 
@@ -85,45 +90,40 @@ Regole:
     );
   }
 
-  /// Ask for difficulty level
-  Future<String> askDifficulty() async {
-    return await sendMessage(
-      'L\'utente è pronto. Ora chiedigli a che livello di difficoltà vuole giocare, da 1 a 10. '
-      'Sii breve, massimo 1-2 frasi.',
-    );
-  }
-
-  /// Inform Gemini about the difficulty chosen and prepare for exercises
+  /// Inform Gemini about the difficulty and prepare for exercises
   Future<String> setDifficulty(int difficulty) async {
     return await sendMessage(
-      'L\'utente ha scelto difficoltà $difficulty. '
-      'Conferma la scelta e digli che stai preparando gli esercizi. '
-      'Sii breve, massimo 2 frasi.',
+      'Il livello di difficoltà impostato è $difficulty su 10. '
+      'Comunica all\'utente il livello e digli che stai preparando gli esercizi. '
+      'Massimo 2 frasi.',
     );
   }
 
   /// Introduce an exercise
   Future<String> introduceExercise(String exerciseType, String instructions) async {
     return await sendMessage(
-      'Ora presenta all\'utente l\'esercizio di $exerciseType. '
-      'Ecco le istruzioni da comunicare:\n$instructions\n\n'
-      'Leggi le istruzioni in modo chiaro e conciso. Non aggiungere troppo testo.',
+      '[ISTRUZIONE INTERNA - non leggere questa riga] '
+      'Presenta brevemente l\'esercizio di $exerciseType e spiega queste regole all\'utente: '
+      '$instructions. '
+      'Rispondi solo con il testo da dire ad alta voce, senza prefissi o commenti.',
     );
   }
 
   /// Present exercise content to the user
   Future<String> presentContent(String content) async {
     return await sendMessage(
-      'Leggi all\'utente il seguente contenuto dell\'esercizio:\n\n$content\n\n'
-      'Leggilo chiaramente. Poi chiedi all\'utente di rispondere.',
+      '[ISTRUZIONE INTERNA - non leggere questa riga] '
+      'Leggi ad alta voce il seguente contenuto all\'utente. '
+      'Rispondi SOLO con il contenuto da leggere, senza aggiungere prefissi, commenti o istruzioni.\n\n'
+      '$content',
     );
   }
 
   /// Ask a question to the user
   Future<String> askQuestion(String question) async {
     return await sendMessage(
-      'Fai la seguente domanda all\'utente:\n"$question"\n'
-      'Poni la domanda in modo chiaro e attendi la risposta.',
+      '[ISTRUZIONE INTERNA] Poni questa domanda all\'utente. '
+      'Rispondi solo con la domanda formulata in modo naturale: $question',
     );
   }
 
