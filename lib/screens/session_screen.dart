@@ -216,9 +216,68 @@ class _SessionScreenState extends State<SessionScreen> {
 
       case SessionState.runningMemory:
       case SessionState.runningAttention:
-      case SessionState.runningFluency:
       case SessionState.runningNumbers:
         return _buildMessageArea(theme, provider, Icons.smart_toy);
+
+      case SessionState.runningFluency:
+        return Column(
+          children: [
+            Expanded(
+              child: _buildMessageArea(theme, provider, Icons.smart_toy),
+            ),
+            // Accumulated words panel
+            if (provider.continuousWords.isNotEmpty)
+              Container(
+                width: double.infinity,
+                constraints: const BoxConstraints(maxHeight: 160),
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.tertiaryContainer.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: theme.colorScheme.tertiary.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.list, size: 16, color: theme.colorScheme.tertiary),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Parole raccolte (${provider.continuousWords.length} segmenti)',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.tertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Flexible(
+                      child: SingleChildScrollView(
+                        child: Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
+                          children: provider.continuousWords
+                              .asMap()
+                              .entries
+                              .map((e) => Chip(
+                                    label: Text(e.value, style: const TextStyle(fontSize: 12)),
+                                    visualDensity: VisualDensity.compact,
+                                    backgroundColor: theme.colorScheme.tertiaryContainer,
+                                  ))
+                              .toList(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        );
 
       case SessionState.evaluating:
         return const Center(child: CircularProgressIndicator());

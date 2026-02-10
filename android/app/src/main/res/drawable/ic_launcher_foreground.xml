@@ -5,83 +5,165 @@
     android:viewportWidth="200"
     android:viewportHeight="200">
 
-    <!-- Dendrites (left to soma) -->
+    <!-- ── 6 Main rays (star-neuron dendrites) ── -->
+
+    <!-- 1. North (Polaris) — longest -->
     <path
-        android:pathData="M50,130 Q70,100 100,95"
-        android:strokeColor="#807BA3D4"
-        android:strokeWidth="1.5"
+        android:pathData="M100,100 Q106,58 100,26"
+        android:strokeColor="#B37BA3D4"
+        android:strokeWidth="2.4"
         android:fillColor="@android:color/transparent"
         android:strokeLineCap="round"/>
     <path
-        android:pathData="M40,90 Q65,85 100,95"
+        android:pathData="M102,52 Q112,42 118,38"
         android:strokeColor="#667BA3D4"
-        android:strokeWidth="1.2"
+        android:strokeWidth="1.0"
         android:fillColor="@android:color/transparent"
         android:strokeLineCap="round"/>
     <path
-        android:pathData="M55,60 Q75,75 100,95"
-        android:strokeColor="#4D7BA3D4"
+        android:pathData="M101,48 Q88,38 82,32"
+        android:strokeColor="#617BA3D4"
         android:strokeWidth="1.0"
         android:fillColor="@android:color/transparent"
         android:strokeLineCap="round"/>
 
-    <!-- Dendrites (soma to right) -->
+    <!-- 2. NE (~60°) -->
     <path
-        android:pathData="M100,95 Q130,90 160,70"
-        android:strokeColor="#807BA3D4"
-        android:strokeWidth="1.5"
+        android:pathData="M100,100 Q132,70 155,58"
+        android:strokeColor="#997BA3D4"
+        android:strokeWidth="1.7"
         android:fillColor="@android:color/transparent"
         android:strokeLineCap="round"/>
     <path
-        android:pathData="M100,95 Q135,100 155,120"
-        android:strokeColor="#667BA3D4"
-        android:strokeWidth="1.2"
-        android:fillColor="@android:color/transparent"
-        android:strokeLineCap="round"/>
-    <path
-        android:pathData="M100,95 Q120,115 145,150"
-        android:strokeColor="#4D7BA3D4"
-        android:strokeWidth="1.0"
+        android:pathData="M135,68 Q146,50 152,40"
+        android:strokeColor="#597BA3D4"
+        android:strokeWidth="0.9"
         android:fillColor="@android:color/transparent"
         android:strokeLineCap="round"/>
 
-    <!-- Outer ring -->
+    <!-- 3. SE (~125°) -->
     <path
-        android:pathData="M82,95 a18,18 0 1,0 36,0 a18,18 0 1,0 -36,0"
+        android:pathData="M100,100 Q134,116 152,142"
+        android:strokeColor="#997BA3D4"
+        android:strokeWidth="1.7"
+        android:fillColor="@android:color/transparent"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M132,120 Q150,124 160,130"
+        android:strokeColor="#597BA3D4"
+        android:strokeWidth="0.9"
+        android:fillColor="@android:color/transparent"
+        android:strokeLineCap="round"/>
+
+    <!-- 4. South (~185°) -->
+    <path
+        android:pathData="M100,100 Q95,140 94,172"
+        android:strokeColor="#8C7BA3D4"
+        android:strokeWidth="1.6"
+        android:fillColor="@android:color/transparent"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M96,148 Q106,158 112,164"
+        android:strokeColor="#597BA3D4"
+        android:strokeWidth="0.9"
+        android:fillColor="@android:color/transparent"
+        android:strokeLineCap="round"/>
+
+    <!-- 5. SW (~240°) -->
+    <path
+        android:pathData="M100,100 Q66,124 46,142"
+        android:strokeColor="#997BA3D4"
+        android:strokeWidth="1.7"
+        android:fillColor="@android:color/transparent"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M62,126 Q45,144 36,155"
+        android:strokeColor="#597BA3D4"
+        android:strokeWidth="0.9"
+        android:fillColor="@android:color/transparent"
+        android:strokeLineCap="round"/>
+
+    <!-- 6. NW (~312°) -->
+    <path
+        android:pathData="M100,100 Q66,70 48,54"
+        android:strokeColor="#997BA3D4"
+        android:strokeWidth="1.7"
+        android:fillColor="@android:color/transparent"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M64,68 Q48,50 40,40"
+        android:strokeColor="#597BA3D4"
+        android:strokeWidth="0.9"
+        android:fillColor="@android:color/transparent"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M60,65 Q55,48 54,38"
+        android:strokeColor="#4D7BA3D4"
+        android:strokeWidth="0.8"
+        android:fillColor="@android:color/transparent"
+        android:strokeLineCap="round"/>
+
+    <!-- ── Soma outer ring ── -->
+    <path
+        android:pathData="M81,100 a19,19 0 1,0 38,0 a19,19 0 1,0 -38,0"
         android:strokeColor="#337BA3D4"
         android:strokeWidth="0.8"
         android:fillColor="@android:color/transparent"/>
 
-    <!-- Soma (central circle) -->
+    <!-- ── Soma filled ── -->
     <path
-        android:pathData="M88,95 a12,12 0 1,0 24,0 a12,12 0 1,0 -24,0"
+        android:pathData="M87,100 a13,13 0 1,0 26,0 a13,13 0 1,0 -26,0"
         android:fillColor="#FF7BA3D4"/>
 
-    <!-- Synapse dots (left) -->
+    <!-- ── 4-pointed star sparkle (Polaris) ── -->
     <path
-        android:pathData="M47,130 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0"
+        android:pathData="M100,94 L102,98 L106,100 L102,102 L100,106 L98,102 L94,100 L98,98 Z"
+        android:fillColor="#99FFFFFF"/>
+
+    <!-- ── Synapse dots (main ray endpoints) ── -->
+    <path
+        android:pathData="M96.2,26 a3.8,3.8 0 1,0 7.6,0 a3.8,3.8 0 1,0 -7.6,0"
+        android:fillColor="#BF5B8BBF"/>
+    <path
+        android:pathData="M152,58 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0"
         android:fillColor="#995B8BBF"/>
     <path
-        android:pathData="M37.5,90 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0"
-        android:fillColor="#805B8BBF"/>
-    <path
-        android:pathData="M53,60 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0"
-        android:fillColor="#665B8BBF"/>
-
-    <!-- Synapse dots (right) -->
-    <path
-        android:pathData="M157,70 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0"
+        android:pathData="M149,142 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0"
         android:fillColor="#995B8BBF"/>
     <path
-        android:pathData="M152.5,120 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0"
-        android:fillColor="#805B8BBF"/>
+        android:pathData="M91,172 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0"
+        android:fillColor="#8C5B8BBF"/>
     <path
-        android:pathData="M143,150 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0"
-        android:fillColor="#665B8BBF"/>
+        android:pathData="M43,142 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0"
+        android:fillColor="#995B8BBF"/>
+    <path
+        android:pathData="M45,54 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0"
+        android:fillColor="#995B8BBF"/>
 
-    <!-- Inner glow -->
+    <!-- ── Synapse dots (branch endpoints) ── -->
     <path
-        android:pathData="M96,95 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0"
-        android:fillColor="#4DFFFFFF"/>
+        android:pathData="M115.8,38 a2.2,2.2 0 1,0 4.4,0 a2.2,2.2 0 1,0 -4.4,0"
+        android:fillColor="#735B8BBF"/>
+    <path
+        android:pathData="M80,32 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0"
+        android:fillColor="#665B8BBF"/>
+    <path
+        android:pathData="M150,40 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0"
+        android:fillColor="#665B8BBF"/>
+    <path
+        android:pathData="M158,130 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0"
+        android:fillColor="#665B8BBF"/>
+    <path
+        android:pathData="M110,164 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0"
+        android:fillColor="#665B8BBF"/>
+    <path
+        android:pathData="M34,155 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0"
+        android:fillColor="#665B8BBF"/>
+    <path
+        android:pathData="M38,40 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0"
+        android:fillColor="#665B8BBF"/>
+    <path
+        android:pathData="M52.2,38 a1.8,1.8 0 1,0 3.6,0 a1.8,1.8 0 1,0 -3.6,0"
+        android:fillColor="#595B8BBF"/>
 
 </vector>

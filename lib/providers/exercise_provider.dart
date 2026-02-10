@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import '../models/exercise.dart';
 import '../models/user_response.dart';
 import '../models/session_result.dart';
@@ -30,6 +31,7 @@ class ExerciseProvider extends ChangeNotifier {
   final EmailService _emailService = EmailService();
 
   SessionState _state = SessionState.idle;
+  bool _cancelled = false;
   int _difficulty = 5;
   ExerciseSet? _exercises;
   final List<UserResponse> _responses = [];
@@ -64,6 +66,7 @@ class ExerciseProvider extends ChangeNotifier {
   ExerciseType? get currentExerciseType => _currentExerciseType;
   String get errorMessage => _errorMessage;
   SpeechService get speechService => _speechService;
+  List<String> get continuousWords => _speechService.continuousWords;
   List<ExerciseType> get enabledExercises => List.unmodifiable(_enabledExercises);
   int get highlightStart => _highlightStart;
   int get highlightEnd => _highlightEnd;
@@ -151,6 +154,7 @@ class ExerciseProvider extends ChangeNotifier {
     _enabledExercises = ExerciseType.values
         .where((t) => exercises.contains(t))
         .toList();
+    _cancelled = false;
     _state = SessionState.greeting;
     _difficulty = difficulty;
     _responses.clear();
@@ -210,11 +214,13 @@ class ExerciseProvider extends ChangeNotifier {
 
       _exercises = await _geminiService.generateExercises(_difficulty);
 
-      // Run enabled exercises in sequence
-      if (exercises.contains(ExerciseType.memory)) await _runMemoryExercise();
-      if (exercises.contains(ExerciseType.attention)) await _runAttentionExercise();
-      if (exercises.contains(ExerciseType.fluency)) await _runFluencyExercise();
-      if (exercises.contains(ExerciseType.numbers)) await _runNumbersExercise();
+      // Run enabled exercises in sequence (check cancellation between each)
+      if (!_cancelled && exercises.contains(ExerciseType.memory)) await _runMemoryExercise();
+      if (!_cancelled && exercises.contains(ExerciseType.attention)) await _runAttentionExercise();
+      if (!_cancelled && exercises.contains(ExerciseType.fluency)) await _runFluencyExercise();
+      if (!_cancelled && exercises.contains(ExerciseType.numbers)) await _runNumbersExercise();
+
+      if (_cancelled) return;
 
       // Complete session
       _sessionEnd = DateTime.now();
@@ -226,6 +232,7 @@ class ExerciseProvider extends ChangeNotifier {
 
       _liveService.endSession();
     } catch (e) {
+      if (_cancelled) return;
       _state = SessionState.error;
       _errorMessage = e.toString();
       _currentMessage = 'Si è verificato un errore: $_errorMessage';
@@ -421,10 +428,19 @@ class ExerciseProvider extends ChangeNotifier {
       notifyListeners();
       await _speechService.speak(instruction);
 
-      // Listen continuously for 60 seconds, restarting after pauses
+      // Haptic feedback for each new word detected (no audio to avoid confusion)
+      _speechService.onNewWordDetected = () {
+        HapticFeedback.mediumImpact();
+      };
+
+      // Listen continuously for 60 seconds
       final answer = await _speechService.listenContinuous(
         totalDuration: const Duration(seconds: 60),
       );
+
+      // Clear feedback callback
+      _speechService.onNewWordDetected = null;
+
       _userTranscript = answer;
       notifyListeners();
 
@@ -587,9 +603,14 @@ class ExerciseProvider extends ChangeNotifier {
     );
   }
 
-  /// Reset session
+  /// Reset session — stops all audio, STT, and cancels ongoing exercises
   void reset() {
+    _cancelled = true;
     _state = SessionState.idle;
+    _speechService.stopSpeaking();
+    _speechService.stopListening();
+    _speechService.cancelContinuous();
+    _speechService.onNewWordDetected = null;
     _exercises = null;
     _responses.clear();
     _scores.clear();

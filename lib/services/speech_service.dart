@@ -12,6 +12,11 @@ class SpeechService {
   bool _isSpeaking = false;
   bool _isInitialized = false;
   bool _inContinuousMode = false;
+  Completer<void>? _activeRoundCompleter;
+  Completer<String>? _sessionCompleter;
+  Timer? _sessionEndTimer;
+  String _roundResult = '';
+  List<String> _continuousWords = [];
   double _ttsSpeed = 0.5;
 
   // Callbacks
@@ -24,9 +29,21 @@ class SpeechService {
   ValueChanged<double>? onSoundLevel;
   /// Called with (startOffset, endOffset) as TTS reads each word
   void Function(int start, int end)? onSpeechProgress;
+  /// Called each time a new word is detected during continuous listening
+  VoidCallback? onNewWordDetected;
 
   bool get isListening => _isListening;
   bool get isSpeaking => _isSpeaking;
+  List<String> get continuousWords => List.unmodifiable(_continuousWords);
+
+  /// Save any pending partial result from current round to accumulated words
+  void _savePendingContinuousResult() {
+    if (_roundResult.isNotEmpty) {
+      _continuousWords.add(_roundResult);
+      _roundResult = '';
+      onPartialResult?.call(_continuousWords.join(', '));
+    }
+  }
 
   /// Initialize both STT and TTS
   Future<bool> initialize() async {
@@ -238,8 +255,8 @@ class SpeechService {
   }
 
   /// Listen continuously for a total duration, collecting all speech.
-  /// Restarts listening after each pause so the user can think and continue.
-  /// Used for timed exercises like verbal fluency (60 seconds).
+  /// Uses a single long STT session; restarts transparently only if
+  /// Android's SpeechRecognizer stops early. Accumulated words are never lost.
   Future<String> listenContinuous({required Duration totalDuration}) async {
     if (!_isInitialized) {
       final ok = await initialize();
@@ -251,73 +268,114 @@ class SpeechService {
       await stopSpeaking();
     }
 
-    final allWords = <String>[];
+    _continuousWords = [];
+    _roundResult = '';
     final stopwatch = Stopwatch()..start();
+    final sessionCompleter = Completer<String>();
+    _sessionCompleter = sessionCompleter;
 
-    // Enter continuous mode: suppress intermediate onListeningStopped signals
     _inContinuousMode = true;
     _isListening = true;
     onListeningStarted?.call();
 
-    while (stopwatch.elapsed < totalDuration) {
+    // Master timer: force-end after totalDuration
+    _sessionEndTimer = Timer(totalDuration, () {
+      if (!sessionCompleter.isCompleted) {
+        _savePendingContinuousResult();
+        sessionCompleter.complete(_continuousWords.join(', '));
+      }
+    });
+
+    // Listen loop — each iteration is one STT session.
+    // Ideally only 1 iteration (full duration), but Android may stop early.
+    while (!sessionCompleter.isCompleted) {
       final remaining = totalDuration - stopwatch.elapsed;
       if (remaining.inSeconds < 2) break;
 
-      // Stop previous round cleanly before restarting
-      await _speechToText.stop();
-      await Future.delayed(const Duration(milliseconds: 300));
+      final roundCompleter = Completer<void>();
+      _activeRoundCompleter = roundCompleter;
+      _roundResult = '';
+      int roundWordCount = 0;
 
-      final completer = Completer<String>();
-      String lastResult = '';
-
-      await _speechToText.listen(
-        onResult: (result) {
-          lastResult = result.recognizedWords;
-          if (result.finalResult) {
-            onFinalResult?.call(lastResult);
-            if (!completer.isCompleted) {
-              completer.complete(lastResult);
+      try {
+        await _speechToText.listen(
+          onResult: (result) {
+            final words = result.recognizedWords;
+            if (words.isNotEmpty) {
+              _roundResult = words;
+              // Count words and fire feedback for each new one
+              final count = words
+                  .split(RegExp(r'[\s,;.]+'))
+                  .where((w) => w.isNotEmpty)
+                  .length;
+              while (roundWordCount < count) {
+                roundWordCount++;
+                onNewWordDetected?.call();
+              }
             }
-          } else {
-            onPartialResult?.call(
-              [...allWords, lastResult].where((w) => w.isNotEmpty).join(', '),
-            );
-          }
-        },
-        localeId: 'it_IT',
-        listenFor: remaining,
-        pauseFor: const Duration(seconds: 5),
-        onSoundLevelChange: (level) {
-          onSoundLevel?.call(level);
-        },
-      );
-
-      // Safety timeout for this round
-      Future.delayed(remaining + const Duration(seconds: 1), () {
-        if (!completer.isCompleted) {
-          completer.complete(lastResult);
-        }
-      });
-
-      final result = await completer.future;
-      if (result.isNotEmpty) {
-        allWords.add(result);
-        // Show accumulated words to the UI
-        onPartialResult?.call(allWords.join(', '));
+            if (result.finalResult) {
+              // Save this segment and signal round end
+              _savePendingContinuousResult();
+              if (!roundCompleter.isCompleted) roundCompleter.complete();
+            } else {
+              // Show accumulated + current partial to UI
+              final display = [..._continuousWords, _roundResult]
+                  .where((w) => w.isNotEmpty)
+                  .join(', ');
+              onPartialResult?.call(display);
+            }
+          },
+          localeId: 'it_IT',
+          listenFor: remaining,
+          pauseFor: remaining, // keep mic open for full remaining time
+          onSoundLevelChange: (level) {
+            onSoundLevel?.call(level);
+          },
+        );
+      } catch (e) {
+        debugPrint('STT listen error: $e');
+        if (!roundCompleter.isCompleted) roundCompleter.complete();
       }
 
-      // Check if we still have time
-      if (stopwatch.elapsed >= totalDuration) break;
+      // Wait for this round to end (finalResult, status 'done', or error)
+      await roundCompleter.future;
+      _activeRoundCompleter = null;
+
+      // Brief pause before transparent restart (if Android stopped early)
+      if (!sessionCompleter.isCompleted) {
+        await Future.delayed(const Duration(milliseconds: 200));
+      }
     }
 
-    // Exit continuous mode
+    _sessionEndTimer?.cancel();
+    _sessionEndTimer = null;
+    _sessionCompleter = null;
+    _savePendingContinuousResult();
+
     await _speechToText.stop();
     stopwatch.stop();
+    _activeRoundCompleter = null;
     _inContinuousMode = false;
     _isListening = false;
     onListeningStopped?.call();
 
-    return allWords.join(', ');
+    return _continuousWords.join(', ');
+  }
+
+  /// Force-cancel an ongoing continuous listening session
+  void cancelContinuous() {
+    _sessionEndTimer?.cancel();
+    _sessionEndTimer = null;
+    if (_sessionCompleter != null && !_sessionCompleter!.isCompleted) {
+      _savePendingContinuousResult();
+      _sessionCompleter!.complete(_continuousWords.join(', '));
+    }
+    _sessionCompleter = null;
+    if (_activeRoundCompleter != null && !_activeRoundCompleter!.isCompleted) {
+      _activeRoundCompleter!.complete();
+    }
+    _activeRoundCompleter = null;
+    _inContinuousMode = false;
   }
 
   /// Stop listening
@@ -332,16 +390,29 @@ class SpeechService {
   void _onSttStatus(String status) {
     debugPrint('STT Status: $status');
     if (status == 'done' || status == 'notListening') {
-      // In continuous mode, don't signal stop between rounds
-      if (!_inContinuousMode) {
-        _isListening = false;
-        onListeningStopped?.call();
+      if (_inContinuousMode) {
+        // Save any pending words, then signal round end for restart
+        _savePendingContinuousResult();
+        if (_activeRoundCompleter != null && !_activeRoundCompleter!.isCompleted) {
+          _activeRoundCompleter!.complete();
+        }
+        return;
       }
+      _isListening = false;
+      onListeningStopped?.call();
     }
   }
 
   void _onSttError(dynamic error) {
     debugPrint('STT Error: $error');
+    if (_inContinuousMode) {
+      // Save any pending words, then signal round end for restart
+      _savePendingContinuousResult();
+      if (_activeRoundCompleter != null && !_activeRoundCompleter!.isCompleted) {
+        _activeRoundCompleter!.complete();
+      }
+      return;
+    }
     _isListening = false;
     onListeningStopped?.call();
   }

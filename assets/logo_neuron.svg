@@ -1,27 +1,58 @@
-<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-  <!-- Polaris Logo - Neurone Singolo (Dark variant) -->
-  <!-- Background -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Polaris Star-Neuron Logo (flat style) -->
   <rect width="200" height="200" rx="40" fill="#1A1A2E"/>
-  <!-- Dendrites (left to soma) -->
-  <path d="M50 130 Q70 100, 100 95" fill="none" stroke="#7BA3D4" stroke-width="1.5" opacity="0.5" stroke-linecap="round"/>
-  <path d="M40 90 Q65 85, 100 95" fill="none" stroke="#7BA3D4" stroke-width="1.2" opacity="0.4" stroke-linecap="round"/>
-  <path d="M55 60 Q75 75, 100 95" fill="none" stroke="#7BA3D4" stroke-width="1" opacity="0.3" stroke-linecap="round"/>
-  <!-- Dendrites (soma to right) -->
-  <path d="M100 95 Q130 90, 160 70" fill="none" stroke="#7BA3D4" stroke-width="1.5" opacity="0.5" stroke-linecap="round"/>
-  <path d="M100 95 Q135 100, 155 120" fill="none" stroke="#7BA3D4" stroke-width="1.2" opacity="0.4" stroke-linecap="round"/>
-  <path d="M100 95 Q120 115, 145 150" fill="none" stroke="#7BA3D4" stroke-width="1" opacity="0.3" stroke-linecap="round"/>
-  <!-- Outer ring (membrane) -->
-  <circle cx="100" cy="95" r="18" fill="none" stroke="#7BA3D4" stroke-width="0.8" opacity="0.2"/>
-  <!-- Soma (central cell body) -->
-  <circle cx="100" cy="95" r="12" fill="#7BA3D4"/>
-  <!-- Synapse dots (left endpoints) -->
-  <circle cx="50" cy="130" r="3" fill="#5B8BBF" opacity="0.6"/>
-  <circle cx="40" cy="90" r="2.5" fill="#5B8BBF" opacity="0.5"/>
-  <circle cx="55" cy="60" r="2" fill="#5B8BBF" opacity="0.4"/>
-  <!-- Synapse dots (right endpoints) -->
-  <circle cx="160" cy="70" r="3" fill="#5B8BBF" opacity="0.6"/>
-  <circle cx="155" cy="120" r="2.5" fill="#5B8BBF" opacity="0.5"/>
-  <circle cx="145" cy="150" r="2" fill="#5B8BBF" opacity="0.4"/>
-  <!-- Inner glow -->
-  <circle cx="100" cy="95" r="4" fill="white" opacity="0.3"/>
+
+  <!-- 6 Main rays (star-neuron dendrites) -->
+  <!-- 1. North (Polaris) — longest -->
+  <path d="M100,100 Q106,58 100,26" stroke="#7BA3D4" stroke-opacity="0.7" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+  <path d="M102,52 Q112,42 118,38" stroke="#7BA3D4" stroke-opacity="0.4" stroke-width="1.0" fill="none" stroke-linecap="round"/>
+  <path d="M101,48 Q88,38 82,32" stroke="#7BA3D4" stroke-opacity="0.38" stroke-width="1.0" fill="none" stroke-linecap="round"/>
+
+  <!-- 2. NE -->
+  <path d="M100,100 Q132,70 155,58" stroke="#7BA3D4" stroke-opacity="0.6" stroke-width="1.7" fill="none" stroke-linecap="round"/>
+  <path d="M135,68 Q146,50 152,40" stroke="#7BA3D4" stroke-opacity="0.35" stroke-width="0.9" fill="none" stroke-linecap="round"/>
+
+  <!-- 3. SE -->
+  <path d="M100,100 Q134,116 152,142" stroke="#7BA3D4" stroke-opacity="0.6" stroke-width="1.7" fill="none" stroke-linecap="round"/>
+  <path d="M132,120 Q150,124 160,130" stroke="#7BA3D4" stroke-opacity="0.35" stroke-width="0.9" fill="none" stroke-linecap="round"/>
+
+  <!-- 4. South -->
+  <path d="M100,100 Q95,140 94,172" stroke="#7BA3D4" stroke-opacity="0.55" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  <path d="M96,148 Q106,158 112,164" stroke="#7BA3D4" stroke-opacity="0.35" stroke-width="0.9" fill="none" stroke-linecap="round"/>
+
+  <!-- 5. SW -->
+  <path d="M100,100 Q66,124 46,142" stroke="#7BA3D4" stroke-opacity="0.6" stroke-width="1.7" fill="none" stroke-linecap="round"/>
+  <path d="M62,126 Q45,144 36,155" stroke="#7BA3D4" stroke-opacity="0.35" stroke-width="0.9" fill="none" stroke-linecap="round"/>
+
+  <!-- 6. NW -->
+  <path d="M100,100 Q66,70 48,54" stroke="#7BA3D4" stroke-opacity="0.6" stroke-width="1.7" fill="none" stroke-linecap="round"/>
+  <path d="M64,68 Q48,50 40,40" stroke="#7BA3D4" stroke-opacity="0.35" stroke-width="0.9" fill="none" stroke-linecap="round"/>
+  <path d="M60,65 Q55,48 54,38" stroke="#7BA3D4" stroke-opacity="0.3" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+
+  <!-- Soma outer ring -->
+  <circle cx="100" cy="100" r="19" stroke="#7BA3D4" stroke-opacity="0.2" stroke-width="0.8" fill="none"/>
+
+  <!-- Soma filled -->
+  <circle cx="100" cy="100" r="13" fill="#7BA3D4"/>
+
+  <!-- 4-pointed star sparkle (Polaris) -->
+  <polygon points="100,94 102,98 106,100 102,102 100,106 98,102 94,100 98,98" fill="white" fill-opacity="0.6"/>
+
+  <!-- Synapse dots (main endpoints) -->
+  <circle cx="100" cy="26" r="3.8" fill="#5B8BBF" fill-opacity="0.75"/>
+  <circle cx="155" cy="58" r="3.0" fill="#5B8BBF" fill-opacity="0.6"/>
+  <circle cx="152" cy="142" r="3.0" fill="#5B8BBF" fill-opacity="0.6"/>
+  <circle cx="94" cy="172" r="3.0" fill="#5B8BBF" fill-opacity="0.55"/>
+  <circle cx="46" cy="142" r="3.0" fill="#5B8BBF" fill-opacity="0.6"/>
+  <circle cx="48" cy="54" r="3.0" fill="#5B8BBF" fill-opacity="0.6"/>
+
+  <!-- Synapse dots (branch endpoints) -->
+  <circle cx="118" cy="38" r="2.2" fill="#5B8BBF" fill-opacity="0.45"/>
+  <circle cx="82" cy="32" r="2.0" fill="#5B8BBF" fill-opacity="0.4"/>
+  <circle cx="152" cy="40" r="2.0" fill="#5B8BBF" fill-opacity="0.4"/>
+  <circle cx="160" cy="130" r="2.0" fill="#5B8BBF" fill-opacity="0.4"/>
+  <circle cx="112" cy="164" r="2.0" fill="#5B8BBF" fill-opacity="0.4"/>
+  <circle cx="36" cy="155" r="2.0" fill="#5B8BBF" fill-opacity="0.4"/>
+  <circle cx="40" cy="40" r="2.0" fill="#5B8BBF" fill-opacity="0.4"/>
+  <circle cx="54" cy="38" r="1.8" fill="#5B8BBF" fill-opacity="0.35"/>
 </svg>
