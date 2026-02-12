@@ -147,6 +147,36 @@ REQUISITI:
 ''';
   }
 
+  /// Validate which words from a list belong to a semantic category
+  /// Returns the list of valid words.
+  Future<List<String>> validateSemanticWords(
+    List<String> words,
+    String category,
+  ) async {
+    if (words.isEmpty) return [];
+
+    final prompt = '''
+Verifica quali delle seguenti parole appartengono alla categoria "$category".
+Parole: ${words.join(', ')}
+
+Rispondi SOLO con un JSON nel formato:
+{"valid": ["parola1", "parola2"], "invalid": ["parola3"]}
+Non aggiungere altro testo.
+''';
+
+    final response = await _model.generateContent([Content.text(prompt)]);
+    final text = response.text ?? '{}';
+    final jsonStr = _extractJson(text);
+
+    try {
+      final json = jsonDecode(jsonStr) as Map<String, dynamic>;
+      return List<String>.from(json['valid'] ?? []);
+    } catch (e) {
+      // If parsing fails, assume all words are valid (don't penalize for API issues)
+      return words;
+    }
+  }
+
   String _extractJson(String text) {
     // Try to find JSON between curly braces
     final start = text.indexOf('{');

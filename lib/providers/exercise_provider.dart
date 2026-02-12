@@ -414,7 +414,7 @@ class ExerciseProvider extends ChangeNotifier {
     notifyListeners();
     await _speechService.speak(transition);
 
-    double totalWordCount = 0;
+    double totalValidCount = 0;
 
     for (int i = 0; i < (_exercises?.fluencyParts.length ?? 0); i++) {
       _currentPart = i;
@@ -444,12 +444,16 @@ class ExerciseProvider extends ChangeNotifier {
       _userTranscript = answer;
       notifyListeners();
 
-      // Count words
+      // Split into individual words
       final words = answer.split(RegExp(r'[\s,;.]+'))
           .where((w) => w.trim().isNotEmpty)
           .toList();
-      final wordCount = words.length.toDouble();
-      totalWordCount += wordCount;
+
+      // Validate words against target criteria
+      final validation = await _validateFluencyWords(words, part);
+      final validCount = validation['validCount'] as int;
+      final invalidWords = validation['invalidWords'] as List<String>;
+      totalValidCount += validCount.toDouble();
 
       _responses.add(UserResponse(
         exerciseType: ExerciseType.fluency,
@@ -458,17 +462,30 @@ class ExerciseProvider extends ChangeNotifier {
         question: '${part.instruction} (${part.target})',
         response: answer,
         timestamp: DateTime.now(),
-        score: wordCount,
+        score: validCount.toDouble(),
       ));
 
-      _currentMessage = 'Hai detto ${words.length} parole.';
+      // Build feedback with valid/total breakdown
+      String feedback;
+      if (words.isEmpty) {
+        feedback = 'Non ho rilevato parole.';
+      } else if (invalidWords.isEmpty) {
+        feedback = 'Hai detto ${words.length} parole, tutte valide. Ottimo!';
+      } else {
+        feedback = 'Hai detto ${words.length} parole, di cui $validCount valide.';
+        if (invalidWords.length <= 5) {
+          feedback +=
+              ' Le parole non valide sono: ${invalidWords.join(', ')}.';
+        }
+      }
+      _currentMessage = feedback;
       notifyListeners();
-      await _speechService.speak('Hai detto ${words.length} parole. Bene!');
+      await _speechService.speak(feedback);
     }
 
-    // Score: assume 10 words per round is good performance at difficulty level
+    // Score based on valid words only
     final expectedWords = _difficulty * 3.0;
-    final avgWords = totalWordCount / (_exercises?.fluencyParts.length ?? 1);
+    final avgWords = totalValidCount / (_exercises?.fluencyParts.length ?? 1);
     _scores[ExerciseType.fluency] = (avgWords / expectedWords * 100).clamp(0, 100);
   }
 
@@ -551,6 +568,118 @@ class ExerciseProvider extends ChangeNotifier {
 
     _scores[ExerciseType.numbers] =
         totalSequences > 0 ? (totalCorrect / totalSequences * 100) : 0;
+  }
+
+  // ==================== Fluency Validation Methods ====================
+
+  /// Validate fluency words based on exercise type and target
+  Future<Map<String, dynamic>> _validateFluencyWords(
+    List<String> words,
+    FluencyPart part,
+  ) async {
+    switch (part.type) {
+      case 'phonemic':
+        return _validatePhonemic(words, part.target);
+      case 'alternating':
+        return _validateAlternating(words, part.target);
+      case 'semantic':
+        return await _validateSemantic(words, part.target);
+      default:
+        return {
+          'validCount': words.length,
+          'validWords': words,
+          'invalidWords': <String>[],
+        };
+    }
+  }
+
+  /// Phonemic: check that each word starts with the target prefix
+  Map<String, dynamic> _validatePhonemic(List<String> words, String target) {
+    final prefix = target.toLowerCase().trim();
+    final valid = <String>[];
+    final invalid = <String>[];
+    for (final word in words) {
+      if (word.toLowerCase().startsWith(prefix)) {
+        valid.add(word);
+      } else {
+        invalid.add(word);
+      }
+    }
+    return {
+      'validCount': valid.length,
+      'validWords': valid,
+      'invalidWords': invalid,
+    };
+  }
+
+  /// Alternating: check that words alternate starting with the given prefixes
+  Map<String, dynamic> _validateAlternating(List<String> words, String target) {
+    final prefixes =
+        target.split('/').map((p) => p.toLowerCase().trim()).toList();
+    if (prefixes.length < 2) {
+      return {
+        'validCount': words.length,
+        'validWords': words,
+        'invalidWords': <String>[],
+      };
+    }
+
+    final valid = <String>[];
+    final invalid = <String>[];
+    for (int i = 0; i < words.length; i++) {
+      final expectedPrefix = prefixes[i % prefixes.length];
+      if (words[i].toLowerCase().startsWith(expectedPrefix)) {
+        valid.add(words[i]);
+      } else {
+        invalid.add(words[i]);
+      }
+    }
+    return {
+      'validCount': valid.length,
+      'validWords': valid,
+      'invalidWords': invalid,
+    };
+  }
+
+  /// Semantic: use Gemini to validate words belong to the given category
+  Future<Map<String, dynamic>> _validateSemantic(
+    List<String> words,
+    String target,
+  ) async {
+    if (words.isEmpty) {
+      return {
+        'validCount': 0,
+        'validWords': <String>[],
+        'invalidWords': <String>[],
+      };
+    }
+
+    try {
+      final validWords =
+          await _geminiService.validateSemanticWords(words, target);
+      final validSet = validWords.map((w) => w.toLowerCase()).toSet();
+      final valid = <String>[];
+      final invalid = <String>[];
+      for (final word in words) {
+        if (validSet.contains(word.toLowerCase())) {
+          valid.add(word);
+        } else {
+          invalid.add(word);
+        }
+      }
+      return {
+        'validCount': valid.length,
+        'validWords': valid,
+        'invalidWords': invalid,
+      };
+    } catch (e) {
+      // On error, count all words as valid to not penalize the user
+      return {
+        'validCount': words.length,
+        'validWords': words,
+        'invalidWords': <String>[],
+      };
+    }
   }
 
   // ==================== Utility Methods ====================
